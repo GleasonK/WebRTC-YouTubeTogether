@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <title>YouRTC - WebRTC Experience</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+	<style>
+		#player {
+			float: left;
+			min-width: 350px;
+			width: 45%;
+			text-align: center;
+		}
+		#video-chat {
+			float: left;
+			min-width: 350px;
+		}
+		video {
+			width: 100%;
+		}
+	</style>
+
+    
+</head>
+<body>
+<div class = "bodyDiv">
+	<h1 style="text-align: center">YouRTC - Watch Together</h1>
+    <div id="player"></div>
+    <div style="float: left; width: 50%;">
+	    <div id="video-chat" hidden="true" style="margin-bottom: 10px;">
+			<div id="vid-box"></div>
+			<button onclick="end()">End Call</button>
+	    </div>
+	    
+	    <form name="loginForm" id="login" action="#" onsubmit="return errWrap(login,this);">
+	        	<input type="text" name="username" id="username" placeholder="Enter A Username"/>            
+				<input type="submit" name="login_submit" value="Log In">
+	    </form>
+	
+		<form name="callForm" id="call" action="#" onsubmit="return errWrap(makeCall,this);">
+	        <input type="text" name="number" id="call" placeholder="Enter User To Call!"/>
+	        <input type="submit" value="Call">
+		</form>
+		<div class="ptext">
+	        <p><b>To Use:</b></p>
+	        <p>Enter a username and click Log in button.<br>If input turns green you are ready to receive/place a call.</p>
+	        <p>In a separate browser window, log in with a different username.<br>Place a call to the first.</p>
+	        <p>Now you can begin to queue videos.</p>
+	    </div>
+    </div>
+</div>
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://cdn.pubnub.com/pubnub.min.js"></script>
+<script src="js/webrtc-2.0.0.js"></script>
+<script type="text/javascript">
+	
+	var video_hold = document.getElementById("video-chat");
+	var video_out  = document.getElementById("vid-box");
+	var game_board = document.getElementById("tic-tac-box");
+	var user_name = "";
+	
+	function login(form) {
+		user_name = form.username.value || "Anonymous";
+		var phone = window.phone = PHONE({
+		    number        : user_name, // listen on username line else Anonymous
+		    publish_key   : 'pub-c-561a7378-fa06-4c50-a331-5c0056d0163c', // Your Pub Key
+		    subscribe_key : 'sub-c-17b7db8a-3915-11e4-9868-02ee2ddab7fe', // Your Sub Key
+		    datachannels  : true,
+		});	
+		phone.ready(function(){form.username.style.background="#55ff5b"; form.login_submit.hidden="true"; });
+		phone.receive(function(session){
+		    session.connected(function(session) { video_hold.hidden=false; video_out.appendChild(session.video); });
+		    session.ended(function(session) { video_out.innerHTML=''; });
+		});
+		phone.datachannel(onDataReceived);
+		return false;
+	}
+	 
+	function makeCall(form){
+		if (!window.phone) alert("Login First!");
+		else phone.dial(form.number.value);
+		return false;
+	}
+	
+	function end(){
+		if (!window.phone) return;
+		window.phone.hangup();
+		video_hold.hidden = true;
+	}
+	
+	/*
+	game_board.onSquareClicked(
+		function(squareNum){
+			if (!window.phone) return;
+			var data = {action:"pause", username:user_name};
+			window.phone.sendData(data);
+		}
+	)
+	*/
+	
+	function onDataReceived(msg){
+		console.log(msg);
+		if (msg.username==user_name) return; // Ignore what I sent.
+		console.log(msg.username + "  " + user_name);
+		switch(msg.data){
+			case YT.PlayerState.PLAYING:
+				playVideo();
+				break;
+			case YT.PlayerState.PAUSED:
+				pauseVideo()();
+				break;
+		}
+	}
+	
+	
+	function errWrap(fxn, form){
+		try {
+			return fxn(form);
+		} catch(err) {
+			console.log(err);
+			alert("WebRTC is currently only supported by Chrome, Opera, and Firefox");
+			return false;
+		}
+	}
+	
+		
+	// 2. This code loads the IFrame Player API code asynchronously.
+	var tag = document.createElement('script');
+	
+	tag.src = "https://www.youtube.com/iframe_api";
+	var firstScriptTag = document.getElementsByTagName('script')[0];
+	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+	
+	// 3. This function creates an <iframe> (and YouTube player)
+	//    after the API code downloads.
+	var player;
+	function onYouTubeIframeAPIReady() {
+		player = new YT.Player('player', {
+		height: '390',
+		width: '640',
+		videoId: 'M7lc1UVf-VE', // Start Video?
+		events: {
+			'onReady': onPlayerReady,
+			'onStateChange': onPlayerStateChange
+			}
+		});
+	}
+	
+	// 4. The API will call this function when the video player is ready.
+	
+	function onPlayerReady(event) {
+		// event.target.playVideo();
+		console.log("Player ready");
+	}
+	
+	
+	// 5. The API calls this function when the player's state changes.
+	//    The function indicates that when playing a video (state=1),
+	//    the player should play for six seconds and then stop.
+	
+	var done = false;
+	function onPlayerStateChange(event) {
+		console.log(event);
+		if (!window.phone) return;
+		event.username = user_name;
+		
+		switch (event.data) {
+			case YT.PlayerState.PLAYING:
+				if (done) return;
+				window.phone.sendData(event);
+				break;
+			case YT.PlayerState.PAUSED:
+				window.phone.sendData(event);
+				break;
+			default:
+				break;
+				
+		}
+	}
+	
+	function playVideo(){
+		player.playVideo();
+	}
+	
+	function pauseVideo(){
+		player.pauseVideo();
+	}
+	
+	function stopVideo() {
+		player.stopVideo();
+	}
+	
+	function cueFromURL(url){
+		var video_id = url.search.split('v=')[1];
+		var ampersandPosition = video_id.indexOf('&');
+		if(ampersandPosition != -1) {
+			video_id = video_id.substring(0, ampersandPosition);
+		}
+		player.cueVideoById(video_id,0,"large");
+	}
+
+</script>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new
+		Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	ga('create', 'UA-46933211-3', 'auto');
+	ga('send', 'pageview');
+
+</script>
+
+</html>

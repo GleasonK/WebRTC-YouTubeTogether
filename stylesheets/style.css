@@ -1,3 +1,31 @@
+#player-box {
+	min-width: 350px;
+	width: 45%;
+	margin-left: 10px;
+	text-align: center;
+	display: inline-block;
+}
+
+#content {
+	position: relative;
+	text-align: center;
+}
+
+#player {
+	width: 100%;
+}
+
+#video-chat {
+	min-width: 350px;
+	display: inline-block;
+}
+video {
+	width: 100%;
+	transform: rotateY(180deg);
+    -webkit-transform:rotateY(180deg); /* Safari and Chrome */
+    -moz-transform:rotateY(180deg); /* Firefox */
+}
+
 .input {
 	position: relative;
 	z-index: 1;
@@ -140,6 +168,7 @@
 #vid-box video{
 	width: 100%;
 	height: auto;
+	min-height: 320px;
     max-height: 50vh;
     max-width: auto;
     
@@ -205,10 +234,8 @@ perspective effects (not including the modals and the overlay).
 }
 
 .md-modal {
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	width: 50%;
+	position: absolute;
+/* 	width: 100%; */
 	max-width: 630px;
 	min-width: 320px;
 	height: auto;
@@ -217,18 +244,11 @@ perspective effects (not including the modals and the overlay).
 	-webkit-backface-visibility: hidden;
 	-moz-backface-visibility: hidden;
 	backface-visibility: hidden;
-	-webkit-transform: translateX(-50%) translateY(-50%);
-	-moz-transform: translateX(-50%) translateY(-50%);
-	-ms-transform: translateX(-50%) translateY(-50%);
-	transform: translateX(-50%) translateY(-50%);
-    
 }
 
 .md-show {
 	visibility: visible;
         border: 3px solid #19a2c6;
-
-
 }
 
 .md-overlay {

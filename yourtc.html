@@ -18,63 +18,81 @@
 <div class = "bodyDiv">
 	<h1 style="margin-bottom: 10px;">YouRTC - Watch Videos Together</h1>
 	<div class="ptext"><p style="margin-top: 5px;margin-bottom: 25px;">Built with the PubNub WebRTC SDK</p></div>
-    <div id="tic-tac-box"></div>
-    <div style="float: left; width: 50%;">
-	    <div class="md-modal md-effect-13" id="modal-13" style="position: absolute;">
-				<div class="md-content">
-					<div>
-		                 <div id="vid-box"></div>
-	                    <button class="md-close">
-	                       <i class="md-close fa fa-times-circle-o"></i>
-	                    </button>
-	                    
-					</div>
-				</div>
-	    </div>
-	    
-	    
-	        <form name="loginForm" id="login" action="#" onsubmit="return errWrap(login,this);">
+	<div id="content">
+	    <div id="player-box">
+		    <div id="player"></div>
+			<form name="cueForm" id="cue" action="#" onsubmit="return errWrap(cueFromURL, this)">
 	            <span class="input input--nao">
-	                <input class="input__field input__field--nao" type="text" name="username" id="username" placeholder="Enter A Username"/>
-	                        <label class="input__label input__label--nao" for="username">
-	                            <span class="input__label-content input__label-content--nao">                                          
-	                            </span>
+	                <input class="input__field input__field--nao" type="text" name="url" id="url" placeholder="Enter YouTube Video URL"/>
+	                        <label class="input__label input__label--nao" for="url">
+	                            <span class="input__label-content input__label-content--nao"></span>
 	                        </label>
 	                    <svg class="graphic graphic--nao" width="300%" height="100%" viewBox="0 0 1200 60" preserveAspectRatio="none">
 	                        <path d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"/>
 	                    </svg>
 	            </span>
 	            
-	               <button class="cbutton cbutton--effect-radomir" type="submit" name="login_submit" value="Log In" style="margin-top: 40px; margin-left:-10px">
-							<i class="cbutton__icon fa fa-fw fa fa-sign-in"></i>
-					</button>
+	            <button class="cbutton cbutton--effect-radomir" type="submit" name="login_submit" value="Log In" style="margin-top: 40px; margin-left:-10px">
+						<i class="cbutton__icon fa fa-fw fa fa-plus"></i>
+			    </button>
 	        </form>
-	
-		<form name="callForm" id="call" action="#" onsubmit="return errWrap(makeCall,this);">
-	        <span class="input input--nao">
-	            <input class="input__field input__field--nao" type="text" name="number" id="call" placeholder="Enter User To Call!"/>
-						<label class="input__label input__label--nao" for="number">
-							<span class="input__label-content input__label-content--nao">                                          
-	                        </span>
-						</label>
-					<svg class="graphic graphic--nao" width="300%" height="100%" viewBox="0 0 1200 60" preserveAspectRatio="none">
-					    <path d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"/>
-					</svg>
-	        </span>
-	        
-	        <button class="cbutton cbutton--effect-radomir md-trigger" type="submit" value="Call" style="margin-top: 40px; margin-left:-10px" data-modal="modal-13">
-	            <i class="cbutton__icon fa fa-fw fa fa fa-phone-square"></i>
-	        </button>
-	
-	        
-		</form>
-	    <button class="cbutton cbutton--effect-radomir md-trigger" value="Call" hidden="true" data-modal="modal-13" id="showModal"></button>
-		<div class="ptext">
-	        <p>To Use:</p>
-	        <p>Enter a username and click Log in button. If input turns green you are ready to receive/place a call.</p>
-	        <p>In a separate browser window, log in with a different username, and place a call to the first. Play!</p> 
+		</div>
+	    <div style="width: 50%; display: inline-block;vertical-align: top;">
+		    <div class="md-modal md-effect-13" id="modal-13" style="position: absolute;">
+					<div class="md-content">
+						<div>
+			                <div id="vid-box"></div>
+		                    <button class="md-close">
+		                       <i class="md-close fa fa-times-circle-o"></i>
+		                    </button>
+						</div>
+					</div>
+		    </div>
+		    
+		    
+		        <form name="loginForm" id="login" action="#" onsubmit="return errWrap(login,this);">
+		            <span class="input input--nao">
+		                <input class="input__field input__field--nao" type="text" name="username" id="username" placeholder="Enter A Username"/>
+		                        <label class="input__label input__label--nao" for="username">
+		                            <span class="input__label-content input__label-content--nao">                                          
+		                            </span>
+		                        </label>
+		                    <svg class="graphic graphic--nao" width="300%" height="100%" viewBox="0 0 1200 60" preserveAspectRatio="none">
+		                        <path d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"/>
+		                    </svg>
+		            </span>
+		            
+		               <button class="cbutton cbutton--effect-radomir" type="submit" name="login_submit" value="Log In" style="margin-top: 40px; margin-left:-10px">
+								<i class="cbutton__icon fa fa-fw fa fa-sign-in"></i>
+						</button>
+		        </form>
+		
+			<form name="callForm" id="call" action="#" onsubmit="return errWrap(makeCall,this);">
+		        <span class="input input--nao">
+		            <input class="input__field input__field--nao" type="text" name="number" id="call" placeholder="Enter User To Call!"/>
+							<label class="input__label input__label--nao" for="number">
+								<span class="input__label-content input__label-content--nao">                                          
+		                        </span>
+							</label>
+						<svg class="graphic graphic--nao" width="300%" height="100%" viewBox="0 0 1200 60" preserveAspectRatio="none">
+						    <path d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"/>
+						</svg>
+		        </span>
+		        
+		        <button class="cbutton cbutton--effect-radomir md-trigger" type="submit" value="Call" style="margin-top: 40px; margin-left:-10px" data-modal="modal-13">
+		            <i class="cbutton__icon fa fa-fw fa fa fa-phone-square"></i>
+		        </button>
+		
+		        
+			</form>
+		    <button class="cbutton cbutton--effect-radomir md-trigger" value="Call" hidden="true" data-modal="modal-13" id="showModal"></button>
+			<div class="ptext">
+		        <p><b>To Use:</b></p>
+		        <p>Enter a username and click Log in button.<br>If input turns green you are ready to receive/place a call.</p>
+		        <p>In a separate browser window, log in with a different username.<br>Place a call to the first.</p>
+		        <p>Now you can begin to queue videos.</p>
+		    </div>
 	    </div>
-
     </div>
 </div>
 </body>
@@ -82,15 +100,11 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 <script src="https://cdn.pubnub.com/pubnub.min.js"></script>
 <script src="js/webrtc-2.0.0.js"></script>
-<script src="js/tictactoe.js"></script>
 <script type="text/javascript">
    
 var video_hold = document.getElementById("video-chat");
 var video_out  = document.getElementById("vid-box");
-var game_board = document.getElementById("tic-tac-box");
 var user_name = "";
-
-var game_board = ticTacToe(game_board);
 
 function login(form) {
 	user_name = form.username.value || "Anonymous";
@@ -105,7 +119,7 @@ function login(form) {
 	    session.connected(function(session) { video_out.appendChild(session.video); showModal(); });
 	    session.ended(function(session) { video_out.innerHTML=''; });
 	});
-	//phone.datachannel(onDataReceived);
+	phone.datachannel(onDataReceived);
 	return false;
 }
  
@@ -120,29 +134,93 @@ function end(){
 	window.phone.hangup();
 	video_hold.hidden = true;
 }
-/*
 
-game_board.onSquareClicked(
-	function(squareNum){
-		if (!window.phone) return;
-		var data = {square:squareNum, username:user_name};
-		window.phone.sendData(data);
+var tag = document.createElement('script');
+var vidId = "_ZtVOce2_98";  // The youtube Video ID for your starting video
+
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// This function creates an <iframe> (and YouTube player) after the API code downloads.
+var player;
+function onYouTubeIframeAPIReady() {
+	player = new YT.Player('player', {
+	height: '390',
+	width: '640',
+	videoId: vidId, // Starting video ID
+	events: {
+		'onStateChange': onPlayerStateChange
+		}
+	});
+}
+	
+
+var done = false; // Variable to tell if the video is done or not
+var seek = false; // Used to decide if we seeked elsewhere in the video.
+var VID_CUE = 6;  // We define a VID_CUE event type. Used in msg.data when queueing a video.
+
+// The API calls this function when the player's state changes. We send the event with a 
+//  username attached through the WebRTC DataChannel
+function onPlayerStateChange(event) {
+	console.log(event);
+	if (!window.phone) return;
+	event.username = user_name;
+	switch (event.data) {
+		case YT.PlayerState.PLAYING:
+			if (done) return;
+			window.phone.sendData(event);
+			break;
+		case YT.PlayerState.PAUSED:
+			window.phone.sendData(event);
+			break;
+		case YT.PlayerState.BUFFERING: // If they seeked, dont send this.
+			if (seek) seek = false;
+			else window.phone.sendData(event);
 	}
-)
-*/
+}
 
-// Maybe combine and only give access to onMessgae?
-/*
+// How to respond to messages received through WebRTC DataChannels
 function onDataReceived(msg){
 	console.log(msg);
 	if (msg.username==user_name) return; // Ignore what I sent.
 	console.log(msg.username + "  " + user_name);
-	var sqr_num = msg.square;
-	game_board.markBox(sqr_num);
+	switch(msg.data){
+		case YT.PlayerState.PLAYING:
+			player.playVideo();
+			break;
+		case YT.PlayerState.PAUSED:
+			player.pauseVideo();
+			break;
+		case YT.PlayerState.BUFFERING: // They are buffering, we must seek.
+			seek = true;
+			player.seekTo(msg.target.B.currentTime, true);
+			break;
+		case VID_CUE:
+			player.cueVideoById(msg.video,0,"large");
+			break;
+	}
 }
-*/
 
-function errWrap(fxn, form){
+// Load a video from the url
+function cueFromURL(form){
+	if (!form.url.value) return alert("Enter a valid YouTube URL");
+	var url = form.url.value;
+	var video_id = url.split('v=')[1];
+	var ampersandPosition = video_id.indexOf('&');
+	if(ampersandPosition != -1) {
+		video_id = video_id.substring(0, ampersandPosition);
+	}
+	player.cueVideoById(video_id,0,"large");
+	
+	if (!window.phone) return false; // Send event if phone connected.
+	var msg = {username:user_name, data:VID_CUE, video:video_id};
+	window.phone.sendData(msg);
+	return false;
+}
+
+// To catch unsupported exceptions
+function errWrap(fxn, form){ 
 	try {
 		return fxn(form);
 	} catch(err) {
@@ -151,6 +229,7 @@ function errWrap(fxn, form){
 		return false;
 	}
 }
+
     
 function showModal(){
     $("#showModal").click();

@@ -23,6 +23,11 @@ video {
 	width: 100%;
 }
 
+a {
+	color: #4f4f4f;
+	font-weight: 500;
+}
+
 .input {
 	position: relative;
 	z-index: 1;

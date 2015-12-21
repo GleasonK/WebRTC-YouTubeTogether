@@ -1,6 +1,6 @@
 # WebRTC - YouTube Together
 
-WebRTC is becoming widely adopted by large companies everywhere. If you don't know it already, WebRTC is a free, open source project that provides simple APIs for creating Real-Time Communications (RTC) for browsers and mobile devices. It powers many modern video chatting services, even Chromecast uses it to broadcast your chrome tab to the TV screen. It makes streaming any content such as video, audio, or arbitrary data simple and _fast_. Today we will be building a video chat application that allows you to watch YouTube with a friend!
+WebRTC is becoming widely adopted by large companies everywhere. If you don't know it already, WebRTC is a free, open-source project that provides simple APIs for creating Real-Time Communications (RTC) for browsers and mobile devices. It powers many modern video chatting services, even Chromecast uses it to broadcast your chrome tab to the TV screen. It makes streaming any content such as video, audio, or arbitrary data simple and _fast_. Today we will be building a video chat application that allows you to watch YouTube with a friend!
 
 ## WebRTC and PubNub Signaling
 
@@ -148,6 +148,36 @@ function end(){
 You should now have a working video chatting application! When you are ready we can move on and implement the DataChannels.
 
 ## Part 2: DataChannels and YouTube
+
+All that's left to do is set up the YouTube API, and then use WebRTC DataChannels to synchronize playback, so lets get going!
+
+### Step 1: The YouTube IFrame API
+
+We will start by filling the `player` div we created in Part 1 with a YouTube iframe. The following code is all based off the [YouTube API documentation](https://developers.google.com/youtube/iframe_api_reference).
+
+```
+// This code loads the IFrame Player API code asynchronously. From YouTube API webpage.
+var tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// This function creates an <iframe> (and YouTube player) after the API code downloads.
+var player;
+var vidId = "dQw4w9WgXcQ";  // The youtube Video ID for your starting video
+function onYouTubeIframeAPIReady() {
+	player = new YT.Player('player', {
+	height: '390',
+	width: '640',
+	videoId: vidId, // Starting video ID
+	events: {
+		'onStateChange': onPlayerStateChange
+		}
+	});
+}
+```
+
+This will look for a div with id `player` and place an iframe inside of it. You can change `vidId` to be the id of any YouTube video. `onPlayerStateChange` is a callback that we will have to implement shortly. 
 
 __Part II Coming Soon__
 

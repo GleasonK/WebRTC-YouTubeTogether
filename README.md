@@ -1,5 +1,7 @@
 # WebRTC - YouTube Together
 
+![YT-WebRTC](img/yt-webrtc.png)
+
 WebRTC is becoming widely adopted by large companies everywhere. If you don't know it already, WebRTC is a free, open-source project that provides simple APIs for creating Real-Time Communications (RTC) for browsers and mobile devices. It powers many modern video chatting services, even Chromecast uses it to broadcast your chrome tab to the TV screen. It makes streaming any content such as video, audio, or arbitrary data simple and _fast_. Today we will be building a video chat application that allows you to watch YouTube with a friend!
 
 ## WebRTC and PubNub Signaling

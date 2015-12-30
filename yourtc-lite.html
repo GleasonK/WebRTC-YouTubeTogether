@@ -49,7 +49,7 @@
 	        <input type="submit" value="Call">
 		</form>
 		
-		<form name="cueForm" id="cue" action="#" onsubmit="return cueFromURL(this);">
+		<form name="cueForm" id="cue" action="#" onsubmit="return errWrap(cueFromURL,this);">
 	        <input type="text" name="url" id="url" placeholder="Enter YouTube Video URL"/>
 	        <input type="submit" value="Queue Video">
 		</form>
@@ -184,6 +184,7 @@
 		if (!window.phone) return; // Send event if phone connected.
 		var msg = {username:user_name, data:VID_CUE, video:video_id};
 		window.phone.sendData(msg);
+		return false;
 	}
 
 	// To catch unsupported exceptions

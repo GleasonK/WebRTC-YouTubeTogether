@@ -90,7 +90,7 @@ We will include the YouTube API later. Now we are ready to write our calling fun
 
 In order to start facilitating video calls, you will need a publish and subscribe key. To get your pub/sub keys, you’ll first need to [sign up for a PubNub account](http://www.pubnub.com/get-started/). Once you sign up, you can find your unique PubNub keys in the [PubNub Developer Dashboard](https://admin.pubnub.com). The free Sandbox tier should give you all the bandwidth you need to build and test your WebRTC Application.
 
-```
+```javascript
 var video_hold = document.getElementById("video-chat");
 var video_out  = document.getElementById("vid-box");
 var user_name = "";
@@ -123,7 +123,7 @@ Then, I define `session.ended` which is called after invoking `phone.hangup`. Th
 
 We now have a phone ready to receive a call, so it is time to create a `makeCall` function.
 
-```
+```javascript
 function makeCall(form){
     if (!window.phone) alert("Login First!");
     else phone.dial(form.number.value);
@@ -135,7 +135,7 @@ If `window.phone` is undefined, we cannot place a call. This will happen if the 
 
 Finally, to end a call or hangup, simply call the `phone.hangup` function and hide the video div.
 
-```
+```javascript
 function end(){
 	if (!window.phone) return;
 	window.phone.hangup();
@@ -155,7 +155,7 @@ All that's left to do is set up the YouTube API, and then use WebRTC DataChannel
 
 We will start by filling the `player` div we created in Part 1 with a YouTube iframe. The following code is all based off the [YouTube API documentation](https://developers.google.com/youtube/iframe_api_reference).
 
-```
+```javascript
 // This code loads the IFrame Player API code asynchronously. From YouTube API webpage.
 var tag = document.createElement('script');
 tag.src = "https://www.youtube.com/iframe_api";
@@ -181,9 +181,9 @@ This will look for a div with id `player` and place an iframe inside of it. You 
 
 ### Step 2: DataChannels to Synchronize Playback
 
-Currently, we can video chat, and we can watch YouTube. All we have left to do is synchronize all video playback. This includes play/pause, seeks, and what video is currently playing. We will accomplish all of this using the WebRTC `DataChannel` API. We need to define a few variables are used in the synchronization.
+Currently, we can video chat, and we can watch YouTube. All we have to do is synchronize video playback. This includes play/pause, seeks, and what video is currently playing. We will accomplish all of this using the WebRTC `DataChannel` API. First, we need to define a few variables are used in the synchronization.
 
-```
+```javascript
 var done = false; // Variable to tell if the video is done or not
 var seek = false; // Used to decide if we seeked elsewhere in the video.
 var VID_CUE = 6;  // We define a VID_CUE event type. Used in msg.data when queueing a video.
@@ -195,14 +195,11 @@ We will use these variables to implement the `onPlayerStateChange` function from
 - `YT.PlayerState.PAUSED` when the pause button is clicked
 - `YT.PlayerState.BUFFERING` when the video is buffering (seeks)
 
-The PubNub WebRTC SDK makes the DataChannel API extremely easy to use. To send data, use the `phone.sendData`. I love when it makes sense too.
+The PubNub WebRTC SDK makes the DataChannel API extremely easy to use. To _send data_, use the `phone.sendData`. Makes sense to me. Now, lets implement that callback, `onPlayerStateChange`.
 
-```
-// The API calls this function when the player's state changes. We send the event with a 
-//  username attached through the WebRTC DataChannel
+```javascript
 function onPlayerStateChange(event) {
-	console.log(event);
-	if (!window.phone) return;
+	if (!window.phone) return; // No active video chat, return.
 	event.username = user_name;
 	switch (event.data) {
 		case YT.PlayerState.PLAYING:
@@ -219,6 +216,96 @@ function onPlayerStateChange(event) {
 }
 ```
 
-__Part II Coming Soon__
+The YouTube API calls this function when the player's state changes. We attach a username to the event and then handle the state change as needed. The event comes through as JSON (e.g. `{data:PLAYING}`). Play/pause are handled by simply sending the event through the WebRTC `DataChannel` to the other user. When a user seeks, the `BUFFERING` callback will be triggered. If _you_ seek, the event gets sent through the data channel. Otherwise the other user sent you the buffering change, so we ignore it.
+
+If you have followed any of my other WebRTC tutorials, you will notice that we use `phone.sendData` instead of `phone.send` here. `sendData` will send 1:1 messages through the WebRTC DataChannel API for immediate interactions, while `send` uses the 1:many PubNub streaming network. The PubNub WebRTC SDK allows us to seamlessly transition between both. 
+
+__The PubNub streaming network is ideal for things like chat, while DataChannels are quicker for user interactions such as synchronization.__
+
+### Step 3: Handling DataChannel Events
+
+In step 2, we sent state changes through the data channel. Now, we have to handle the changes by creating an `onDataReceived` function, and then registering it as a callback using `phone.datachannel` in our login function.
+
+```javascript
+function onDataReceived(msg){
+	if (msg.username==user_name) return; // Ignore what I sent.
+	switch(msg.data){
+		case YT.PlayerState.PLAYING:
+			player.playVideo();
+			break;
+		case YT.PlayerState.PAUSED:
+			player.pauseVideo();
+			break;
+		case YT.PlayerState.BUFFERING: // They are buffering, we must seek.
+			seek = true;
+			player.seekTo(msg.target.B.currentTime, true);
+			break;
+		case VID_CUE:
+			player.cueVideoById(msg.video,0,"large");
+			break;
+	}
+}
+```
+
+If the incoming data message is from yourself, return and ignore it. We handle the received data using several YouTube player functions. If the user we are chatting with sent a `PLAYING` change, we simply call `player.playVideo`. If we receive a `BUFFERING` change, the other user likely seemed. We handle this by calling `player.seekTo`. We need to set `seek=true` so that our `onStateChange` function does not send a `BUFFERING` message back, causing an infinite seek loop. We also check for `VID_CUE` events, which change the currently playing video. 
+
+We will implement a cue function in step 4, we still need to register this data channel callback. At the end of your `login` function from Part 1, before you return false, register the callback as follows:
+
+```javascript
+function login(form) {
+	// Setup phone
+	// Ready and Receive Callbacks
+	...
+	phone.datachannel(onDataReceived);
+	return false;
+}
+```
+
+### Step 4: Adding Videos to the Queue
+
+Take a deep breath, the hard part is over. In this final step we will implement a function to change the currently playing video. To change the currently playing video, we will use the YouTube function:
+
+
+```javascript
+player.cueVideoById(videoId:String, 
+					startSeconds:Number,
+					suggestedQuality:String):Void
+```
+
+When looking at a YouTube URL, for example `https://www.youtube.com/watch?v=dQw4w9WgXcQ`, the video ID is the final value `dQw4w9WgXcQ`. Our queue function will parse this off a url.
+
+```javascript
+function cueFromURL(form){
+	if (!form.url.value) return false;
+	var url = form.url.value;
+	var video_id = url.split('v=')[1];
+	var ampersandPosition = video_id.indexOf('&');
+	if(ampersandPosition != -1) {
+		video_id = video_id.substring(0, ampersandPosition);
+	}
+	player.cueVideoById(video_id,0,"large");
+	if (!window.phone) return; // Send event if phone connected.
+	var msg = {username:user_name, data:VID_CUE, video:video_id};
+	window.phone.sendData(msg);
+	return false;
+}
+```
+
+If the field is empty, we ignore the click by returning false. We parse the ID by splitting at `v=` and the following `&`, or the end of the string if no ampersand is present. When we have the ID, we cue the video and send a message through the data channel to notify users of the new video. We create the JSON payload in the `msg` variable and send it with `phone.sendData`.
+
+You made it. Time to relax by dialing a friend and watching a funny cat video. Now its up to you to dream up some new features for this app! Hope you enjoyed this WebRTC tutorial, see you next time.
+
+### Want to learn more?
+
+If you made it this far, you must. Here are some other resources PubNub offers on WebRTC:
+
+- [WebRTC RealTime TictacToe](https://scotch.io/tutorials/learn-webrtc-build-a-real-time-tic-tac-toe)
+- [PubNub Android WebRTC API](https://github.com/GleasonK/android-webrtc-api)
+- [Android WebRTC Example](https://github.com/GleasonK/AndroidRTC/)
+- [PubNub WebRTC SDK](https://github.com/stephenlb/webrtc-sdk)
+- [What is WebRTC](http://www.pubnub.com/blog/what-is-webrtc/)
+
+We will be putting out more information and tricks of using WebRTC in the coming weeks so stay tuned!
 
 [LiveDemo]:https://kevingleason.me/WebRTC-YouTubeTogether/yourtc.html
+[YouTube Ref]:https://developers.google.com/youtube/iframe_api_reference

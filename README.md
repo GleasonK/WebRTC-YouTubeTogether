@@ -179,6 +179,8 @@ function onYouTubeIframeAPIReady() {
 
 This will look for a div with id `player` and place an iframe inside of it. You can change `vidId` to be the id of any YouTube video. `onPlayerStateChange` is a callback that we will have to implement shortly. 
 
+![YT Demo](img/youtube.png)
+
 ### Step 2: DataChannels to Synchronize Playback
 
 Currently, we can video chat, and we can watch YouTube. All we have to do is synchronize video playback. This includes play/pause, seeks, and what video is currently playing. We will accomplish all of this using the WebRTC `DataChannel` API. First, we need to define a few variables are used in the synchronization.

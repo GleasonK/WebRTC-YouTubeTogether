@@ -43,29 +43,29 @@ For example, I run Python2.7 and the command I use is `python -m SimpleHTTPServe
 
 ### Step 1: The HTML5 Backbone
 
-```
-&lt;div id=&quot;player&quot;&gt;&lt;/div&gt;
-&lt;div style=&quot;float: left; width: 50%;&quot;&gt;
-    &lt;div id=&quot;video-chat&quot; hidden=&quot;true&quot; style=&quot;margin-bottom: 10px;&quot;&gt;
-		&lt;div id=&quot;vid-box&quot;&gt;&lt;/div&gt;
-		&lt;button onclick=&quot;end()&quot;&gt;End Call&lt;/button&gt;
-    &lt;/div&gt;
+```html
+<div id="player"></div>
+<div style="float: left; width: 50%;">
+    <div id="video-chat" hidden="true" style="margin-bottom: 10px;">
+		<div id="vid-box"></div>
+		<button onclick="end()">End Call</button>
+    </div>
     
-    &lt;form name=&quot;loginForm&quot; id=&quot;login&quot; action=&quot;#&quot; onsubmit=&quot;return login(this);&quot;&gt;
-        	&lt;input type=&quot;text&quot; name=&quot;username&quot; id=&quot;username&quot; placeholder=&quot;Enter A Username&quot;/&gt;            
-			&lt;input type=&quot;submit&quot; name=&quot;login_submit&quot; value=&quot;Log In&quot;&gt;
-    &lt;/form&gt;
+    <form name="loginForm" id="login" action="#" onsubmit="return login(this);">
+        	<input type="text" name="username" id="username" placeholder="Enter A Username"/>            
+			<input type="submit" name="login_submit" value="Log In">
+    </form>
 
-	&lt;form name=&quot;callForm&quot; id=&quot;call&quot; action=&quot;#&quot; onsubmit=&quot;return makeCall(this);&quot;&gt;
-        &lt;input type=&quot;text&quot; name=&quot;number&quot; id=&quot;call&quot; placeholder=&quot;Enter User To Call!&quot;/&gt;
-        &lt;input type=&quot;submit&quot; value=&quot;Call&quot;&gt;
-	&lt;/form&gt;
+	<form name="callForm" id="call" action="#" onsubmit="return makeCall(this);">
+        <input type="text" name="number" id="call" placeholder="Enter User To Call!"/>
+        <input type="submit" value="Call">
+	</form>
 	
-	&lt;form name=&quot;cueForm&quot; id=&quot;cue&quot; action=&quot;#&quot; onsubmit=&quot;return cueFromURL(this);&quot;&gt;
-        &lt;input type=&quot;text&quot; name=&quot;url&quot; id=&quot;url&quot; placeholder=&quot;Enter YouTube Video URL&quot;/&gt;
-        &lt;input type=&quot;submit&quot; value=&quot;Queue Video&quot;&gt;
-	&lt;/form&gt;
-&lt;/div&gt;
+	<form name="cueForm" id="cue" action="#" onsubmit="return cueFromURL(this);">
+        <input type="text" name="url" id="url" placeholder="Enter YouTube Video URL"/>
+        <input type="submit" value="Queue Video">
+	</form>
+</div>
 ```
 
 This should leave you with a very basic HTML backbone that looks something like this:
@@ -78,10 +78,10 @@ The `player` div will house our YouTube video, while `vid-box` will hold the vid
 
 There are three libraries that you will need to include to make WebRTC operations much easier. The first thing you should include is [jQuery](https://jquery.com/) to make modifying DOM elements a breeze. Then, you will need the PubNub JavaScript SDK to facilitate the WebRTC signaling. Finally, include the PubNub WebRTC SDK which makes placing phone calls as simple as calling the `dial(number)` function.
 
-```
-&lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js&quot;&gt;&lt;/script&gt;
-&lt;script src=&quot;https://cdn.pubnub.com/pubnub.min.js&quot;&gt;&lt;/script&gt;
-&lt;script src=&quot;http://cdn.kevingleason.me/webrtc.js&quot;&gt;&lt;/script&gt;
+```html
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://cdn.pubnub.com/pubnub.min.js"></script>
+<script src="http://cdn.kevingleason.me/webrtc.js"></script>
 ```
 
 We will include the YouTube API later. Now we are ready to write our calling functions for `login`, `makeCall`, and `end`!
@@ -178,6 +178,46 @@ function onYouTubeIframeAPIReady() {
 ```
 
 This will look for a div with id `player` and place an iframe inside of it. You can change `vidId` to be the id of any YouTube video. `onPlayerStateChange` is a callback that we will have to implement shortly. 
+
+### Step 2: DataChannels to Synchronize Playback
+
+Currently, we can video chat, and we can watch YouTube. All we have left to do is synchronize all video playback. This includes play/pause, seeks, and what video is currently playing. We will accomplish all of this using the WebRTC `DataChannel` API. We need to define a few variables are used in the synchronization.
+
+```
+var done = false; // Variable to tell if the video is done or not
+var seek = false; // Used to decide if we seeked elsewhere in the video.
+var VID_CUE = 6;  // We define a VID_CUE event type. Used in msg.data when queueing a video.
+```
+
+We will use these variables to implement the `onPlayerStateChange` function from the previous step. The YouTube API has built in `PlayerStates` which are attached to the `onPlayerStateChange` event. Here is a quick overview of some events and when they are triggered:
+
+- `YT.PlayerState.PLAYING` when the play button is clicked
+- `YT.PlayerState.PAUSED` when the pause button is clicked
+- `YT.PlayerState.BUFFERING` when the video is buffering (seeks)
+
+The PubNub WebRTC SDK makes the DataChannel API extremely easy to use. To send data, use the `phone.sendData`. I love when it makes sense too.
+
+```
+// The API calls this function when the player's state changes. We send the event with a 
+//  username attached through the WebRTC DataChannel
+function onPlayerStateChange(event) {
+	console.log(event);
+	if (!window.phone) return;
+	event.username = user_name;
+	switch (event.data) {
+		case YT.PlayerState.PLAYING:
+			if (done) return;
+			window.phone.sendData(event);
+			break;
+		case YT.PlayerState.PAUSED:
+			window.phone.sendData(event);
+			break;
+		case YT.PlayerState.BUFFERING: // If they seeked, dont send this.
+			if (seek) seek = false;
+			else window.phone.sendData(event);
+	}
+}
+```
 
 __Part II Coming Soon__
 

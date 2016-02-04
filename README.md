@@ -25,7 +25,7 @@ PubNub makes this signaling incredibly simple, and then gives you the power to d
 WebRTC is supported by popular browsers such as Chrome and Firefox, but there are many browsers on which certain features will not work. See a list of [supported browsers here](http://iswebrtcreadyyet.com/).
 
 ## Part 1: The Video Setup
-Time to begin! First we will make the bare minimum WebRTC video chat. Then, in Part 2 we will be using WebRTC `DataChannels` and the YouTube API to create our application. The live demo for this tutorial [can be found here](http://kevingleason.me/WebRTC-TicTacToe/rtctactoe.html)!
+Time to begin! First we will make the bare minimum WebRTC video chat. Then, in Part 2 we will be using WebRTC `DataChannels` and the YouTube API to create our application. The live demo for this tutorial [can be found here][LiveDemo]!
 
 ### A Note on Testing and Debugging
 
@@ -82,7 +82,7 @@ There are three libraries that you will need to include to make WebRTC operation
 
 ```html
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-<script src="https://cdn.pubnub.com/pubnub.min.js"></script>
+<script src="https://cdn.pubnub.com/pubnub-3.7.23.min.js"></script>
 <script src="http://cdn.kevingleason.me/webrtc.js"></script>
 ```
 

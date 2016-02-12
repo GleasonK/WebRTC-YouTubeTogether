@@ -316,8 +316,8 @@ function get_xirsys_servers() {
         data: {
             room: 'default',
             application: 'default',
-            domain: '',
-            ident: '',
+            domain: 'your-domain',
+            ident: 'your-ident',
             secret: 'Your API key, on dashboard',
             secure: 1,
         },

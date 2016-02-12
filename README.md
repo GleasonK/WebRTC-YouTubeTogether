@@ -299,6 +299,47 @@ If the field is empty, we ignore the click by returning false. We parse the ID b
 
 You made it. Time to relax by dialing a friend and watching a funny cat video. Now its up to you to dream up some new features for this app! Hope you enjoyed this WebRTC tutorial, see you next time.
 
+## Production Quality WebRTC with XirSys
+
+While PubNub handles all the signaling for you WebRTC application, there are many other server side features that you will likely need to handle the quirks of real-world connectivity. In reality, most devices live behind layers of NAT, proxies, and corporate firewalls. [XirSys](http://xirsys.com/) is a WebRTC hosting company that provides production quality STUN and TURN servers to solve these problems. Sign up on their website to receive your free API key so you can start using using their solutions!
+
+To use a XirSys server in your application, follow their [Quick Start Guide](http://xirsys.com/guide/) to make a domain. You will need to navigate to [this page](https://dashboard.xirsys.com/domains/list) and create a new domain. This domain will automatically be populated with an application “default” and a room “default” which we will use to get ICE servers.
+
+ICE Servers can be gathered by placing a request to the XirSys API. __Note: Requires jQuery.__
+
+```js
+function get_xirsys_servers() {
+    var servers;
+    $.ajax({
+        type: 'POST',
+        url: 'https://service.xirsys.com/ice',
+        data: {
+            room: 'default',
+            application: 'default',
+            domain: '',
+            ident: '',
+            secret: 'Your API key, on dashboard',
+            secure: 1,
+        },
+        success: function(res) {
+            console.log(res);
+            res = JSON.parse(res);
+            if (!res.e) servers = res.d.iceServers;
+        },
+        async: false
+    });
+    return servers;
+}
+```
+
+This will return the servers you can use to start a video chat with production quality dependency. The PubNub phone.dial has an optional argument of servers to use to place a call, so to use your servers, simply call it as follows: 
+
+```js
+phone.dial(number, get_xirsys_servers());
+```
+
+You’re all ready to go now! Happy chatting!
+
 ### Want to learn more?
 
 If you made it this far, you must. Here are some other resources PubNub offers on WebRTC:
